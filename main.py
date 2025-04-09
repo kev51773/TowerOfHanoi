@@ -1,6 +1,7 @@
 from os import name, system
 from colorama import Fore, Back, Style
 from shutil import get_terminal_size
+from copy import deepcopy
 import getpass
 
 class Screen:
@@ -32,13 +33,12 @@ class Screen:
         self.clear()
         print(Screen.title)
         print(Fore.WHITE + f'Moves: {len(moves)}\n')
-        pegs_with_blanks = []
-        for peg in pegs:
+        pegs_with_blanks = deepcopy(pegs)
+        for peg in pegs_with_blanks:
             while len(peg) < 4:
                 peg.append(0)
-            pegs_with_blanks.append(peg)
         for disk in range(4):
-            for stack in range(3):
+            for stack in range(1,4):
                 print(Screen.gap + Screen.disks[pegs_with_blanks[stack][disk]], end="")
             print('\n', end="")
         print('\n' + Fore.CYAN + '(1-3)Move (U)ndo             ' + Fore.MAGENTA + '(L)oad (S)ave             ' + Fore.LIGHTRED_EX + '(R)estart (Q)uit\n')
@@ -49,7 +49,7 @@ class Screen:
 class Game:
     def __init__(self):
         self.moves = []
-        self.pegs = [[1,2,3,4],[],[]]
+        self.pegs = [[],[1,2,3,4],[],[]]
         self.screen = Screen()
         self.screen.clear()
         self.screen.draw_splash_screen()
@@ -63,18 +63,18 @@ class Game:
                 case '1' | '2' | '3':
                     from_peg = command
                     to_peg = getpass.getpass(Fore.YELLOW + f"Move from {from_peg} to which peg? :")
-                    if to_peg in ('1', '2', '3')  and from_peg != to_peg:
+                    if to_peg in ('1', '2', '3'):
+                        from_peg = int(from_peg)
+                        to_peg = int(to_peg)
                         if self.try_move(from_peg, to_peg):
                             self.moves.append([from_peg, to_peg])
                         else:
-                            print(f'Can\'t place a disk on top of a smaller disk.')
+                            print(f'Illegal move.')
                             self.wait()
-                    else:
-                        print(f'Can\'t move from {from_peg} to {to_peg}')
-                        self.wait()
                 case 'u':
                     if len(self.moves) > 0:
-                        from_peg, to_leg = self.moves.pop()
+                        from_peg, to_peg = self.moves.pop()
+                        self.pegs[from_peg].insert(0, self.pegs[to_peg].pop(0))
                 case 'l':
                     pass
                 case 's':
@@ -84,12 +84,26 @@ class Game:
                     print("Goodbye!")
                     quit()
                 case 'r':
-                    pass
+                    self.moves = []
+                    self.pegs = [[],[1,2,3,4],[],[]]
                 case 'debug':
                     print(self.moves)
                     self.wait()
+                case '4':
+                    self.pegs = [[],[1,2],[3],[4]]
+                case '9':
+                    self.pegs = [[],[],[1],[2,3,4]]
+            if self.pegs == [[],[],[],[1,2,3,4]]:
+                print('you win!')
+                self.wait()
     def try_move(self, from_peg, to_peg):
-        return True
+        if len(self.pegs[from_peg]) == 0 or from_peg == to_peg:
+            return False
+        elif self.pegs[to_peg] and self.pegs[from_peg][0] > self.pegs[to_peg][0]:
+            return False
+        else:
+            self.pegs[to_peg].insert(0, self.pegs[from_peg].pop(0))
+            return True
     def wait(self):
         command = getpass.getpass('Press enter to continue.')
 game = Game()
