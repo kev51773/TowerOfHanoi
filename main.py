@@ -36,7 +36,7 @@ class Screen:
         pegs_with_blanks = deepcopy(pegs)
         for peg in pegs_with_blanks:
             while len(peg) < 4:
-                peg.append(0)
+                peg.insert(0,0)
         for disk in range(4):
             for stack in range(1,4):
                 print(Screen.gap + Screen.disks[pegs_with_blanks[stack][disk]], end="")
