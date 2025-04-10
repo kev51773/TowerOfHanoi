@@ -58,6 +58,17 @@ class Game:
     def play(self):
         while True:
             self.screen.draw(self.pegs, self.moves)
+            if self.pegs == [[],[],[],[1,2,3,4]]:
+                print('''               __     __          __          ___       
+               \ \   / /          \ \        / (_)      
+                \ \_/ /__  _   _   \ \  /\  / / _ _ __  
+                 \   / _ \| | | |   \ \/  \/ / | | '_ \ 
+                  | | (_) | |_| |    \  /\  /  | | | | |
+                  |_|\___/ \__,_|     \/  \/   |_|_| |_|\n''')
+                self.wait()
+                self.moves = []
+                self.pegs = [[],[1,2,3,4],[],[]]
+                self.screen.draw(self.pegs, self.moves)
             from_peg = 0
             command = getpass.getpass(Fore.YELLOW + 'Enter your command: ')
             match command.lower():
@@ -87,16 +98,8 @@ class Game:
                 case 'r':
                     self.moves = []
                     self.pegs = [[],[1,2,3,4],[],[]]
-                case 'debug':
-                    print(self.moves)
-                    self.wait()
-                case '4':
-                    self.pegs = [[],[1,2],[3],[4]]
                 case '9':
                     self.pegs = [[],[],[1],[2,3,4]]
-            if self.pegs == [[],[],[],[1,2,3,4]]:
-                print('you win!')
-                self.wait()
     def try_move(self, from_peg, to_peg):
         if len(self.pegs[from_peg]) == 0 or from_peg == to_peg:
             return False
