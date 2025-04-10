@@ -17,7 +17,7 @@ The game allows users to play Towers of Hanoi directly in their terminal. It fea
 
 Before running the game, ensure you have the following installed:
 
-* Python 3.x
+* Python 3.10.x
 * `colorama` (`pip install colorama`)
 * `pynput` (`pip install pynput`)
 
