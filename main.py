@@ -3,6 +3,7 @@ from colorama import Fore, Back, Style
 from shutil import get_terminal_size
 from copy import deepcopy
 import getpass
+import pickle
 
 class Screen:
     min_width = 72
@@ -76,9 +77,9 @@ class Game:
                         from_peg, to_peg = self.moves.pop()
                         self.pegs[from_peg].insert(0, self.pegs[to_peg].pop(0))
                 case 'l':
-                    pass
+                    self.load()
                 case 's':
-                    pass
+                    self.save()
                 case 'q':
                     self.screen.clear()
                     print("Goodbye!")
@@ -106,4 +107,18 @@ class Game:
             return True
     def wait(self):
         command = getpass.getpass('Press enter to continue.')
+    def load(self):
+        try:
+            with open('.toh_save', 'rb') as file:
+                self.pegs, self.moves = pickle.load(file)
+                print('Game Loaded. Press enter to continue')
+                self.wait()
+        except Exception:
+            print('No save file found')
+            self.wait()
+    def save(self):
+        with open('.toh_save', 'wb') as file:
+            pickle.dump((self.pegs, self.moves), file)
+            print('Game Saved. Press enter to continue')
+            self.wait()
 game = Game()
