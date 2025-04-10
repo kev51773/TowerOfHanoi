@@ -1,9 +1,9 @@
 from os import name, system
-from colorama import Fore, Back, Style
+from colorama import Fore
 from shutil import get_terminal_size
 from copy import deepcopy
-import getpass
 import pickle
+from pynput import keyboard
 
 class Screen:
     min_width = 72
@@ -45,7 +45,7 @@ class Screen:
         print('\n' + Fore.CYAN + '(1-3)Move (U)ndo             ' + Fore.MAGENTA + '(L)oad (S)ave             ' + Fore.LIGHTRED_EX + '(R)estart (Q)uit\n')
     def draw_splash_screen(self):
         print(Screen.title)
-        answer = getpass.getpass(Fore.LIGHTBLUE_EX + '                         Press enter to start\n\n')
+        print(Fore.LIGHTBLUE_EX + '                        Press any key to start\n\n')
         
 class Game:
     def __init__(self):
@@ -54,6 +54,7 @@ class Game:
         self.screen = Screen()
         self.screen.clear()
         self.screen.draw_splash_screen()
+        self.get_input()
         self.play()
     def play(self):
         while True:
@@ -70,11 +71,12 @@ class Game:
                 self.pegs = [[],[1,2,3,4],[],[]]
                 self.screen.draw(self.pegs, self.moves)
             from_peg = 0
-            command = getpass.getpass(Fore.YELLOW + 'Enter your command: ')
+            command = self.get_input()
             match command.lower():
                 case '1' | '2' | '3':
                     from_peg = command
-                    to_peg = getpass.getpass(Fore.YELLOW + f"Move from {from_peg} to which peg? :")
+                    print(Fore.YELLOW + f"Move from {from_peg} to which peg? :")
+                    to_peg = self.get_input()
                     if to_peg in ('1', '2', '3'):
                         from_peg = int(from_peg)
                         to_peg = int(to_peg)
@@ -94,12 +96,11 @@ class Game:
                 case 'q':
                     self.screen.clear()
                     print("Goodbye!")
+                    self.clear_input_buffer()
                     quit()
                 case 'r':
                     self.moves = []
                     self.pegs = [[],[1,2,3,4],[],[]]
-                case '9':
-                    self.pegs = [[],[],[1],[2,3,4]]
     def try_move(self, from_peg, to_peg):
         if len(self.pegs[from_peg]) == 0 or from_peg == to_peg:
             return False
@@ -109,12 +110,13 @@ class Game:
             self.pegs[to_peg].insert(0, self.pegs[from_peg].pop(0))
             return True
     def wait(self):
-        command = getpass.getpass('Press enter to continue.')
+        print('Press any key to continue.')
+        self.get_input()
     def load(self):
         try:
             with open('.toh_save', 'rb') as file:
                 self.pegs, self.moves = pickle.load(file)
-                print('Game Loaded. Press enter to continue')
+                print('Game Loaded')
                 self.wait()
         except Exception:
             print('No save file found')
@@ -122,6 +124,35 @@ class Game:
     def save(self):
         with open('.toh_save', 'wb') as file:
             pickle.dump((self.pegs, self.moves), file)
-            print('Game Saved. Press enter to continue')
+            print('Game Saved')
             self.wait()
+    def get_input(self):
+        key_pressed = None
+
+        def on_press(key):
+            nonlocal key_pressed
+            try:
+                key_pressed = key.char
+            except AttributeError:
+                key_pressed = 'zzz'
+            return False
+        with keyboard.Listener(on_press=on_press) as listener:
+            listener.join()
+        self.clear_input_buffer()
+        return key_pressed
+    def clear_input_buffer(self):
+        if name == 'nt':
+            import msvcrt
+            while msvcrt.kbhit():
+                msvcrt.getch()
+        else:
+            import termios, fcntl, os, sys
+            fd = sys.stdin.fileno()
+            flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+            fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+            try:
+                sys.stdin.read()
+            except BlockingIOError:
+                pass
+            fcntl.fcntl(fd, fcntl.F_SETFL, flags)
 game = Game()
