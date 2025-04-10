@@ -74,17 +74,17 @@ class Game:
             command = self.get_input()
             match command.lower():
                 case '1' | '2' | '3':
-                    from_peg = command
-                    print(Fore.YELLOW + f"Move from {from_peg} to which peg? :")
-                    to_peg = self.get_input()
-                    if to_peg in ('1', '2', '3'):
-                        from_peg = int(from_peg)
-                        to_peg = int(to_peg)
-                        if self.try_move(from_peg, to_peg):
-                            self.moves.append([from_peg, to_peg])
-                        else:
-                            print(f'Illegal move.')
-                            self.wait()
+                    from_peg = int(command)
+                    if len(self.pegs[from_peg]) > 0:
+                        print(Fore.YELLOW + f"Move from {str(from_peg)} to which peg? :")
+                        to_peg = self.get_input()
+                        if to_peg in ('1', '2', '3'):
+                            to_peg = int(to_peg)
+                            if self.try_move(from_peg, to_peg):
+                                self.moves.append([from_peg, to_peg])
+                            else:
+                                print(f'Can\'t move a disk on top of a smaller disk!')
+                                self.wait()
                 case 'u':
                     if len(self.moves) > 0:
                         from_peg, to_peg = self.moves.pop()
@@ -122,23 +122,21 @@ class Game:
             print('No save file found')
             self.wait()
     def save(self):
-        with open('.toh_save', 'wb') as file:
+        with open('.toh_save', 'wb') as file: 
             pickle.dump((self.pegs, self.moves), file)
             print('Game Saved')
             self.wait()
     def get_input(self):
         key_pressed = None
-
         def on_press(key):
             nonlocal key_pressed
             try:
                 key_pressed = key.char
             except AttributeError:
-                key_pressed = 'zzz'
+                key_pressed = 'invalid_key'
             return False
         with keyboard.Listener(on_press=on_press) as listener:
             listener.join()
-        self.clear_input_buffer()
         return key_pressed
     def clear_input_buffer(self):
         if name == 'nt':
